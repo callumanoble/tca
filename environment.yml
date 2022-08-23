@@ -13,6 +13,5 @@ dependencies:
   - pytest
 
   # run
-  -
   - python=3.8
 

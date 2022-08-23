@@ -30,7 +30,7 @@ def implementation_shortfall(
         qty_order: int,
         fees: float) -> ImplementationShortfall:
     """
-    Calculate market activity implementation shortfall for order execution
+    Calculate market activity implementation shortfall for order execution (vs. arrival) price
 
     TODO - investigate argument validation (pydantic, FastAPI like?)
 
@@ -182,3 +182,30 @@ def rpm(px_exec_avg: int, side: Side, px_trade: List[float], qty_trade: List[int
 
     qty_underperform = qty_total - qty_outperform
     return 0.5 * (1 + qty_outperform / qty_total - qty_underperform / qty_total)
+
+def unrealized_performance():
+    """
+    TODO - how does this compare to opportunity cost?
+    :return:
+    """
+    ...
+
+
+# Benchmarks
+#
+# arrival price
+# VWAP
+# PWP
+# Post-trade price
+
+# Metrics
+#
+# Part-rate
+# Parent fill rates
+# Child fill rates
+
+# Algo comparisons
+#
+# Cost model adjusted horse races
+# KS test
+# Others?
