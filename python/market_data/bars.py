@@ -5,15 +5,18 @@ import ibapi.connection
 from ib_insync import *
 import pandas as pd
 
-def load_bars(connection: ibapi.connection.Connection,
-              symbol_type: str,
-              symbol: str,
-              exchange: str,
-              lookback: str,
-              bar_horizon: str,
-              bar_type: str,
-              end_dt: datetime = "",
-              regular_hours: bool = True) -> pd.DataFrame:
+
+
+def load_us_stock_bars(connection: ibapi.connection.Connection,
+                       symbol_type: str,
+                       symbol: str,
+                       exchange: str,
+                       primary: str,
+                       lookback: str,
+                       bar_horizon: str,
+                       bar_type: str,
+                       end_dt: datetime = "",
+                       regular_hours: bool = True) -> pd.DataFrame:
     """
     Load specified bars from IB TWS
 
@@ -21,6 +24,7 @@ def load_bars(connection: ibapi.connection.Connection,
     :param symbol_type: Asset class str per https://ib-insync.readthedocs.io/api.html#ib_insync.contract.Contract
     :param symbol: Ticker
     :param exchange: Exchange
+    :param primary: Primary exchange
     :param lookback: Historical lookback range per https://ib-insync.readthedocs.io/api.html#ib_insync.ib.IB.reqHistoricalData
     :param bar_horizon: Bar range per https://ib-insync.readthedocs.io/api.html#ib_insync.ib.IB.reqHistoricalData
     :param bar_type: Data type per https://ib-insync.readthedocs.io/api.html#ib_insync.ib.IB.reqHistoricalData
@@ -28,11 +32,39 @@ def load_bars(connection: ibapi.connection.Connection,
     :param regular_hours: Only include regular trading hours
     :return: Dataframe containing bars
     """
-    contract = Contract(secType=symbol_type, symbol=symbol, exchange=exchange)
-    connection.qualifyContracts(contract)
-    cds = util.df(connection.reqContractDetails(contract))
+
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
+    pd.set_option("display.max_colwidth", None)
+
+    #contract_spec = Contract(secType=symbol_type, symbol=symbol, currency="USD", exchange="NYSE", primaryExchange=primary_exch)
+    # contract_spec = Contract(secType=symbol_type, symbol=symbol, exchange=exchange, primaryExchange=primary)
+    #contract_spec = Contract(secType=symbol_type, symbol=symbol)
+    contract_spec = Stock(symbol=symbol, currency="USD")
+
+    cds = util.df(connection.reqContractDetails(contract_spec))
     print(cds.columns)
-    print(cds[["marketName", "validExchanges", "tradingHours"]])
+    # print(cds[["marketName", "validExchanges"]])
+    print(cds[["marketName", "contract", "validExchanges"]])
+    # for i, r in cds[["marketName", "validExchanges"]].iterrows():
+    #     print(r[])
+    # #print(cds[["validExchanges"]])
+
+    contracts = connection.qualifyContracts(contract_spec)
+    n_contracts = len(contracts)
+
+    if n_contracts == 0:
+        raise ValueError(f"Failed to qualify contract for symbol_type:[{symbol_type}] symbol:[{symbol}] exchange:[{exchange}] primary:[{primary}]")
+
+    if n_contracts > 1:
+        raise ValueError(
+            f"Ambiguous contracts num:[{n_contracts}] for symbol_type:[{symbol_type}] symbol:[{symbol}] exchange:[{exchange}] primary:[{primary}]")
+
+    contract = contracts[0]
+
+    # cds = util.df(connection.reqContractDetails(contract))
+    # print(cds.columns)
+    # print(cds[["marketName", "validExchanges", "tradingHours"]])
 
     bars = connection.reqHistoricalData(
         contract,
@@ -43,7 +75,8 @@ def load_bars(connection: ibapi.connection.Connection,
         useRTH=regular_hours)
 
     # convert to pandas dataframe:
-    return util.df(bars)
+    bar_df = util.df(bars)
+    return bar_df
 
 
 def main():
@@ -55,11 +88,12 @@ def main():
     arg_parser.add_argument("-s", "--symbol",
                             required=True,
                             help="Symbol")
-    # TODO - resolve default logic
     arg_parser.add_argument("-x", "--exchange",
-                            default="",
-                            required=False,
-                            help="Exchange (defaults to primary)")
+                            required=True,
+                            help="Exchange")
+    arg_parser.add_argument("-p", "--primary",
+                            required=True,
+                            help="Primary exchange")
     arg_parser.add_argument("-e", "--end_dt",
                             type=lambda s: datetime.strptime(s, '%Y-%m-%d') if s else "",
                             required=False,
@@ -90,11 +124,12 @@ def main():
 
     ib = IB()
     with ib.connect('127.0.0.1', 7497, clientId=1) as connection:
-        bars = load_bars(
+        bars = load_us_stock_bars(
             connection=connection,
             symbol_type=args.symbol_type,
             symbol=args.symbol,
             exchange=args.exchange,
+            primary=args.primary,
             lookback=args.lookback,
             bar_horizon=args.bar_horizon,
             bar_type=args.bar_type,
