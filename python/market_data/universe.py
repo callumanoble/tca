@@ -22,7 +22,7 @@ def load(uni: Universe) -> pd.DataFrame:
     :return: Dataframe containing universe data
     """
     if uni == Universe.SNP_500:
-        return pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
+        return pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0]
 
     else:
         raise ValueError(f"Unsupported universe:[{uni}]")
