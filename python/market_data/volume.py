@@ -41,6 +41,7 @@ def load_snp_500_volume(
     ib = IB()
 
     for i, symbol in enumerate(univ["Symbol"]):
+
         # TODO - add tidier, scoped reconnect logic
         if not ib.isConnected():
             ib.connect('127.0.0.1', 7497, clientId=1, readonly=True)
@@ -81,11 +82,11 @@ def load_snp_500_volume(
         except Exception as e:
             logger.error(f"Failed to load symbol:[{symbol}] error:[{e}]")
 
-    if ib.isConnected():
-        ib.disonnect()
-
     # join symbols
     universe_df = pd.concat(symbol_data, axis=1)
+    universe_df = universe_df.sort_index()
+
+    # fix zero volumes with NaN
     return universe_df
 
 

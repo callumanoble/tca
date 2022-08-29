@@ -14,9 +14,11 @@ dependencies:
 
   # run
   - python=3.8
-  - pip
-#  - ib-insync>=0.9.71,<1
-  - lxml
+  - matplotlib
   - pandas
+  - pip
+  - jupyterlab
+  - jupyter_contrib_nbextensions
+  - lxml
   - pip:
       - ib-insync>=0.9.71,<1
