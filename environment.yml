@@ -21,5 +21,6 @@ dependencies:
   - pandas
   - pip
   - scikit-learn
+  - scipy
   - pip:
       - ib-insync>=0.9.71,<1
