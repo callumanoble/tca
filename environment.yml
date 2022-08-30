@@ -14,11 +14,12 @@ dependencies:
 
   # run
   - python=3.8
-  - matplotlib
-  - pandas
-  - pip
   - jupyterlab
   - jupyter_contrib_nbextensions
   - lxml
+  - matplotlib
+  - pandas
+  - pip
+  - scikit-learn
   - pip:
       - ib-insync>=0.9.71,<1
